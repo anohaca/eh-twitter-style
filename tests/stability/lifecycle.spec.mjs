@@ -1,0 +1,30 @@
+import {test,expect,ui,open,waitForRoute,settle} from '../e2e/harness.mjs';
+import {PROBE_SCRIPT,scale,origins,installRunHooks,checkInvariants,snapshot,logOperation} from './probe.mjs';
+import {buildInitScript} from '../e2e/harness.mjs';
+test.use({preInitScript:PROBE_SCRIPT});installRunHooks(test);
+const listenerCounts=s=>({window:s.listeners.window,document:s.listeners.document,element:s.listeners.element,elementConnected:s.listeners.elementConnected});
+const lifecycleCounts=s=>({listeners:listenerCounts(s),observers:Object.fromEntries(Object.entries(s.observers).map(([k,v])=>[k,{alive:v.alive,targets:v.targets}])),intervals:s.timers.intervals});
+async function stableLifecycleCounts(page){let previous=null,stable=0;const observed=[];for(let i=0;i<12;i++){await settle(page,250);const current=lifecycleCounts(await snapshot(page));observed.push(current);if(previous&&JSON.stringify(current)===JSON.stringify(previous)){stable++;if(stable>=2)return current}else stable=0;previous=current}throw new Error(`lifecycle resource baseline did not stabilize across three GC-backed snapshots; observations=${JSON.stringify(observed)}`)}
+async function waitForStatsRequestsToSettle(page,site){
+ const matches=()=>site.state.log.filter(entry=>entry.method==='GET'&&/\/g\/\d+\//.test(new URL(entry.url).pathname)).length;
+ const quietMs=process.env.EHTW_STABILITY==='full'?3_500:1_600;let count=matches(),lastChange=Date.now(),deadline=lastChange+15_000;
+ while(Date.now()<deadline){await page.waitForTimeout(100);const next=matches();if(next!==count){count=next;lastChange=Date.now()}if(count>0&&Date.now()-lastChange>=quietMs)return}
+ const recent=site.state.log.filter(entry=>/\/g\/\d+\//.test(new URL(entry.url).pathname)).slice(-8);
+ throw new Error(`list stats requests did not settle before lifecycle baseline; count=${count}; recent=${JSON.stringify(recent)}`)
+}
+function listenerTypeDiff(before,after){const out={};for(const category of ['window','document','element']){const types=new Set([...Object.keys(before.listeners.byType[category]),...Object.keys(after.listeners.byType[category])]);for(const type of types){const delta=(after.listeners.byType[category][type]||0)-(before.listeners.byType[category][type]||0);if(delta)out[`${category}:${type}`]=delta}}return out}
+for(const origin of origins)test(`H duplicate injection equals single injection ${origin}`,async({page,site,diagnostics},testInfo)=>{
+ // runMain() checks RUN_KEY at eh-twitter-style_user.js:1583. Earlier registrations include window scroll/pagehide (158/167), document touchstart (531), document click/submit (556/604), window popstate/beforeunload/pageshow (629/676/677), and runMain's pageshow (1565).
+ testInfo.annotations.push({type:'run-once-guard',description:'runMain() / RUN_KEY: eh-twitter-style_user.js:1583; earlier listeners at 158,167,531,556,604,629,676,677,1565'});
+ await page.addInitScript(buildInitScript());const baseline=await page.context().newPage();await open(baseline,`${origin}/`);const one=await snapshot(baseline);await baseline.close();await open(page,`${origin}/`);expect(await ui(page).locator('#ehtw-shell').count()).toBe(1);expect(await page.evaluate(()=>window.__ehtwInjected)).toBe(2);const two=await snapshot(page),target=site.state.galleries[0],href=`${origin}/g/${target.gid}/${target.token}/`,path=`/g/${target.gid}/${target.token}/`,hitStart=site.state.faultHits.length,docs=diagnostics.documentNavigations.length;site.state.faults.push({name:'duplicate-injection-click',path,type:'fetch',status:503,times:1});await ui(page).locator(`.ehtw-tweet[data-ehtw-href="${href}"] .ehtw-tweet-title .glink`).click();await waitForRoute(page,new RegExp(`/g/${target.gid}/${target.token}/`),'ehtw-detail');await checkInvariants(page,diagnostics,site,'ehtw-detail');const hitDelta=site.state.faultHits.length-hitStart;testInfo.annotations.push({type:'duplicate-click-fault-hits',description:`one user click produced ${hitDelta} router-fault hit(s)`});expect(hitDelta).toBe(1);expect(diagnostics.documentNavigations.length).toBe(docs);await page.goBack();await waitForRoute(page,`${origin}/`,'ehtw-list');const typeDiff=listenerTypeDiff(one,two);expect(typeDiff).toEqual({});expect(listenerCounts(two)).toEqual(listenerCounts(one));logOperation(testInfo,`${origin} duplicate injection route behavior`,page.url());await checkInvariants(page,diagnostics,site,'ehtw-list');
+});
+
+for(const origin of origins)test(`H pageshow restores list after leaving origin ${origin}`,async({page,site,diagnostics},testInfo)=>{
+ await open(page,`${origin}/`);await page.evaluate(()=>window.scrollTo(0,900));const before=await page.evaluate(()=>({y:scrollY,count:document.querySelectorAll('.ehtw-tweet').length}));await page.goto('about:blank');await page.goBack();await page.locator('html.ehtw-list').waitFor({state:'attached',timeout:15_000});logOperation(testInfo,`${origin} pageshow`,page.url());await checkInvariants(page,diagnostics,site,'ehtw-list');const after=await page.evaluate(()=>({y:scrollY,count:document.querySelectorAll('.ehtw-tweet').length}));expect(after.count).toBe(before.count);expect(Math.abs(after.y-before.y)).toBeLessThanOrEqual(100);
+});
+
+for(const origin of origins)test(`H visibility lifecycle counters ${origin}`,async({page,site,diagnostics},testInfo)=>{
+ const n=scale(3,100);await open(page,`${origin}/`);await waitForStatsRequestsToSettle(page,site);const before=await stableLifecycleCounts(page);
+ for(let i=0;i<n;i++){const hidden=i%2===0;await page.evaluate(value=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>value?'hidden':'visible'});Object.defineProperty(document,'hidden',{configurable:true,get:()=>value});document.dispatchEvent(new Event('visibilitychange'))},hidden);expect(await page.evaluate(()=>document.hidden=== (document.visibilityState==='hidden'))).toBe(true);logOperation(testInfo,`${origin} visibility ${hidden?'hidden':'visible'} ${i+1}`,page.url());await checkInvariants(page,diagnostics,site,'ehtw-list')}
+ const after=await snapshot(page);expect(lifecycleCounts(after)).toEqual(before);
+});

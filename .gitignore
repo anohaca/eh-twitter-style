@@ -1,0 +1,12 @@
+.DS_Store
+
+# Local runtime and conversation artifacts
+work/
+.codex-bridge/
+prompts/
+
+# Test dependencies and captures from real websites
+tests/node_modules/
+tests/fixtures/real-site/
+tests/test-results/
+docs/real-site-snapshot-*.md

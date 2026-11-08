@@ -1,0 +1,25 @@
+{
+  "name": "ehtw-offline-tests",
+  "private": true,
+  "type": "module",
+  "description": "Offline desktop + mobile end-to-end tests for eh-twitter-style_user.js against a mocked site",
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium webkit",
+    "test": "playwright test",
+    "test:desktop": "playwright test --project=desktop-1440-light --project=desktop-1440-dark --project=desktop-1280 --project=tablet-900 --project=narrow-699 --project=webkit-desktop",
+    "test:mobile": "playwright test --project=iphone-13-chromium --project=iphone-14-pro-max-chromium --project=pixel-7 --project=iphone-13-landscape-chromium --project=webkit-iphone-13",
+    "test:webkit": "playwright test --project=webkit-iphone-13 --project=webkit-desktop",
+    "test:stability": "EHTW_STABILITY=full playwright test --config=playwright.stability.config.mjs",
+    "test:stability:quick": "EHTW_STABILITY=quick playwright test --config=playwright.stability.config.mjs",
+    "test:stability:full": "EHTW_STABILITY=full playwright test --config=playwright.stability.config.mjs",
+    "test:chromium": "EHTW_WEBKIT=0 playwright test",
+    "test:static": "node ../tools/build-check.mjs && node ../tools/audit-16-dimensions.mjs",
+    "test:all": "node ../tools/test-all.mjs --offline on",
+    "report": "playwright show-report ../work/test-runs/offline-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "postcss": "^8.5.32",
+    "terser": "^5.51.2"
+  }
+}
