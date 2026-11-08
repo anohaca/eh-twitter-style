@@ -23,9 +23,8 @@ async function pressImageAt(page, testInfo, fraction) {
   const point = await page.evaluate((fraction) => {
     const cx = innerWidth / 2;
     const cy = innerHeight / 2;
-    // 1.17.256 top-aligns click-mode images on phones (edge-to-edge under the
-    // status bar), so a wide image may not cover the screen centre; then use the
-    // visible active click-mode image instead.
+    // A portrait image can be narrower than the screen, so the viewport centre
+    // may not hit it. Fall back to the visible active click-mode image.
     const img = document.elementFromPoint(cx, cy)?.closest('.ehtw-reader-image-frame')?.querySelector('img') ||
       (document.documentElement.classList.contains('ehtw-reader-click')
         ? document.querySelector('.ehtw-reader-image-frame.ehtw-reader-active img')
@@ -158,6 +157,26 @@ test.describe('click paging mode', () => {
     await page.reload();
     await page.waitForSelector('.ehtw-reader-root[data-ehtw-reader-ready="true"]', { timeout: 20_000 });
     await expect(page.locator('html')).toHaveClass(/ehtw-reader-click/);
+  });
+
+  test('fit image remains centered in click paging mode', async ({ page, site }, testInfo) => {
+    await openReader(page, site, 6);
+    await tap(page, testInfo, ui(page).locator('.ehtw-reader-mode').nth(1));
+    await expect(page.locator('html')).toHaveClass(/ehtw-reader-click/);
+    await expect(page.locator('html')).not.toHaveClass(/ehtw-reader-zoomed/);
+    await expect.poll(() => ui(page).locator('.ehtw-reader-image-frame.ehtw-reader-active img').evaluate((image) =>
+      image.complete && image.naturalWidth > 0
+    )).toBe(true);
+
+    const alignment = await ui(page).locator('.ehtw-reader-image-frame.ehtw-reader-active').evaluate((frame) => {
+      const bounds = frame.getBoundingClientRect();
+      return {
+        horizontal: Math.abs((bounds.left + bounds.right) / 2 - innerWidth / 2),
+        vertical: Math.abs((bounds.top + bounds.bottom) / 2 - innerHeight / 2)
+      };
+    });
+    expect(alignment.horizontal, `image horizontal offset: ${alignment.horizontal}px`).toBeLessThanOrEqual(2);
+    expect(alignment.vertical, `image vertical offset: ${alignment.vertical}px`).toBeLessThanOrEqual(2);
   });
 
   test('keyboard arrows and the wheel page in click mode (desktop)', async ({ page, site }, testInfo) => {
