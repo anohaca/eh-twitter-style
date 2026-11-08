@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../src/eh-twitter-style.user.src.js', import.meta.url), 'utf8');
-assert.match(source, /@version\s+1\.17\.276/);
+assert.match(source, /@version\s+1\.17\.277/);
 
 function extractDeclaration(name) {
   const start = source.indexOf(`function ${name}(`);
@@ -176,7 +176,7 @@ assert.match(source, /followingTimelineItems\.sort\(\(a, b\) =>\s*b\.timestamp -
 assert.match(source, /timestamp: timestamp \|\| 0/, 'missing timestamps do not get an artificial newest timestamp');
 assert.match(source, /const requestUrl = new URL\(source\.url, location\.href\)\.href;[\s\S]*?fetchUrl\.searchParams\.set\([\s\S]*?source\.key[\s\S]*?cache: 'reload'/, 'initial creator feed requests bypass stale tag-page cache');
 assert.match(source, /requestBatch\.map\(async \(\[sourceKey, requestedUrl, source\]\)[\s\S]*?fetchUrl\.searchParams\.set\([\s\S]*?sourceKey[\s\S]*?cache: 'reload'/, 'creator pagination bypasses stale tag-page cache too');
-assert.match(source, /dataset\.ehtwScriptVersion = '1\.17\.276'/, 'running userscript version is exposed in the document for diagnostics');
+assert.match(source, /dataset\.ehtwScriptVersion = '1\.17\.277'/, 'running userscript version is exposed in the document for diagnostics');
 assert.match(source, /function makeSearchToplistPanel\(\)[\s\S]*?const isExhentaiToplistHost = location\.origin === 'https:\/\/exhentai\.org'[\s\S]*?loadToplistThroughBridge/, 'ExHentai Search gets the same toplists through the E-Hentai bridge');
 assert.match(source, /event\.origin !== 'https:\/\/e-hentai\.org'[\s\S]*?event\.source !== frame\.contentWindow[\s\S]*?payload\.token !== token/, 'cross-origin toplist bridge validates origin, source and token');
 assert.match(source, /html\.ehtw-enabled #ehtw-right\.ehtw-toplist-only-sidebar[\s\S]*?:not\(#ehtw-search-card\):not\(\.ehtw-right-search\)[\s\S]*?display: none !important/, 'Search sidebars show only Search and its Toplists on both gallery sites');

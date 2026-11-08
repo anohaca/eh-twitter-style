@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const script = readFileSync(new URL('../src/eh-twitter-style.user.src.js', import.meta.url), 'utf8');
-assert.ok(/@version\s+1\.17\.276/.test(script), 'userscript version includes ExHentai support');
+assert.ok(/@version\s+1\.17\.277/.test(script), 'userscript version includes ExHentai support');
 assert.match(script, /window\.onresize = null;[\s\S]*?window\.update_window_extents = \(\) => \{\};/, 'the custom reader disables the native resize callback that assumes #img remains present');
 assert.match(script, /const edgeToEdgeViewport = [\s\S]*?viewport-fit=cover[\s\S]*?readerViewportMeta\.setAttribute\('content', edgeToEdgeViewport\)/, 'reader viewport includes viewport-fit=cover so images can extend behind the status area');
 assert.match(script, /syncReaderHistory = \(pageNumber\) => \{[\s\S]*?safeReplaceHistoryState\(window\.history, readerState, '', pageUrl, 'reader-page-url-sync'\)[\s\S]*?spaRenderedHref = pageUrl;/, 'reader URL updates keep the SPA URL observer aligned while passing through the guarded history writer');

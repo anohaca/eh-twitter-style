@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../src/eh-twitter-style.user.src.js', import.meta.url), 'utf8');
-assert.match(source, /@version\s+1\.17\.276/);
+assert.match(source, /@version\s+1\.17\.277/);
 
 function extractDeclaration(name) {
   const start = source.indexOf(`function ${name}(`);

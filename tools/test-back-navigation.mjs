@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../src/eh-twitter-style.user.src.js', import.meta.url), 'utf8');
-assert.match(source, /@version\s+1\.17\.276/, 'userscript version includes the latest navigation fix');
+assert.match(source, /@version\s+1\.17\.277/, 'userscript version includes the latest navigation fix');
 const galleryBackStatePosition = source.indexOf('let galleryBackTraversalPending = false;');
 assert.ok(galleryBackStatePosition >= 0 && galleryBackStatePosition < source.indexOf('function runMain()'), 'popstate back-traversal state is in the outer scope, not trapped in runMain');
 const thumbIndexStart = source.indexOf('function getGalleryThumbPageIndex(');

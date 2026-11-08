@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../src/eh-twitter-style.user.src.js', import.meta.url), 'utf8');
-assert.match(source, /@version\s+1\.17\.276/);
+assert.match(source, /@version\s+1\.17\.277/);
 assert.match(source, /@match\s+https:\/\/exhentai\.org\/\*/, 'the userscript runs on ExHentai');
 assert.match(source, /const EHTW_GALLERY_ORIGINS = new Set\(\[\s*'https:\/\/e-hentai\.org',\s*'https:\/\/exhentai\.org'/, 'both gallery origins use the SPA routing guard');
 assert.ok(source.indexOf('function getGalleryIdFromUrl(') < source.indexOf('function runMain()'), 'SPA router can access the gallery ID helper outside the page-local scope');
