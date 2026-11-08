@@ -32,7 +32,7 @@ const normalizeCreatorFollowTag = vm.runInContext('normalizeCreatorFollowTag', c
 assert.equal(normalizeCreatorFollowTag('artist:Foo_Bar'), 'artist:foo bar');
 assert.equal(normalizeCreatorFollowTag('group:Circle+Name'), 'group:circle name');
 
-assert.match(source, /@version\s+1\.17\.277/);
+assert.match(source, /@version\s+1\.17\.278/);
 assert.match(source, /toggleWatchedTagInMyTags\(tag, \(success, isWatched\)/, 'card follow toggles the native My Tags Watch state in place');
 assert.match(source, /ehtw_block_uploader=/, 'card block routes through My Settings');
 assert.match(source, /qs\('#tagname_new'\)/, 'new artist tags use the native My Tags input');

@@ -13,7 +13,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_SCRIPT = path.join(ROOT, 'eh-twitter-style_user.js');
 const DEFAULT_CDP = process.env.EHTW_CDP_HTTP || 'http://127.0.0.1:9222';
 const DEFAULT_TIMEOUT = 600_000;
-const REQUIRED_VERSION = '1.17.277';
+const REQUIRED_VERSION = '1.17.278';
 const COMMON_PATHS = [
   ['home', '/', false],
   ['watched', '/watched', true],

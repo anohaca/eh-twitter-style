@@ -51,14 +51,23 @@ test.describe('expanded post', () => {
 
   test('About card: right column on desktop, inline on smaller screens', async ({ page, site }, testInfo) => {
     await open(page, detailUrl(site.state.galleries[0]));
+    const metaRow = ui(page).locator('.ehtw-detail-meta');
+    const aboutCard = ui(page).locator('.ehtw-about-card');
     if (layoutOf(testInfo) === 'desktop') {
       await expect(ui(page).locator('#ehtw-right .ehtw-about-card #gdd')).toBeVisible();
+      await expect(metaRow).toBeVisible();
+      await expect(aboutCard).toBeVisible();
+    } else if (layoutOf(testInfo) === 'phone') {
+      await expect(metaRow).toBeHidden();
+      await expect(ui(page).locator('.ehtw-mobile-about')).toBeHidden();
+      await expect(aboutCard).toBeHidden();
     } else {
-      // Below 1000px the right column is hidden, so the metadata must move inline.
+      // Tablet widths keep the metadata inline; only phone widths hide it.
       await expect(ui(page).locator('#gdd'), 'gallery metadata (#gdd) is visible on load below 1000px').toBeVisible();
       expect(await ui(page).locator('#gdd').evaluate((e) => !!e.closest('#ehtw-center'))).toBe(true);
+      await expect(metaRow).toBeVisible();
+      await expect(aboutCard).toBeVisible();
     }
-    await expect(ui(page).locator('#gdd')).toContainText('File Size:');
   });
 
   test('About card follows viewport changes across the 1000px breakpoint', async ({ page, site }, testInfo) => {

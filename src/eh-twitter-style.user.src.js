@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EH Twitter Style
 // @namespace    https://e-hentai.org/
-// @version      1.17.277
+// @version      1.17.278
 // @description  将 E-Hentai 列表页和画廊详情页改造成 Twitter/X 风格，并为阅读页加入黑底连续预载和移动端适配
 // @homepageURL  https://github.com/anohaca/eh-twitter-style
 // @supportURL   https://github.com/anohaca/eh-twitter-style/issues
@@ -2505,7 +2505,7 @@ function getReaderImagePriority(pageNumber, centerPageNumber, targetPageNumber, 
     addSpaPageEventListener(window, 'pageshow', continueGalleryBackTraversal);
 
     // Expose the running version for local diagnostics without adding UI.
-    document.documentElement.dataset.ehtwScriptVersion = '1.17.277';
+    document.documentElement.dataset.ehtwScriptVersion = '1.17.278';
     try {
         const paintEntries = window.performance?.getEntriesByType?.('paint') || [];
         const firstPaint = paintEntries.find((entry) => entry.name === 'first-paint') ||
@@ -13506,6 +13506,13 @@ html.ehtw-detail #ehtw-center .ehtw-detail-meta {
     max-width: 100% !important;
     height: auto !important;
     text-align: left !important;
+}
+
+@media (max-width: 699px) {
+    html.ehtw-detail #ehtw-center .ehtw-detail-meta,
+    html.ehtw-detail #ehtw-center .ehtw-mobile-about {
+        display: none !important;
+    }
 }
 
 html.ehtw-detail #ehtw-center .ehtw-detail-timestamp {
@@ -27246,7 +27253,7 @@ html.ehtw-list .ehtw-tweet-author:has(.ehtw-follow-choice-wrap) .ehtw-card-more-
             if (typeof controlMainWorldReader === 'function') controlMainWorldReader('route-scripts-end');
 
             if ((historyPrepared || historyMode === 'pop') && queueActiveAddressIfStale()) return false;
-            document.documentElement.dataset.ehtwScriptVersion = '1.17.277';
+            document.documentElement.dataset.ehtwScriptVersion = '1.17.278';
             window[ '__EHTW_STYLE_050__' ] = false;
             window.__EHTW_SPA_READY__ = false;
             runMain();
