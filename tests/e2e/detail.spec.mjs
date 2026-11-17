@@ -49,6 +49,21 @@ test.describe('expanded post', () => {
     await expect(ui(page).locator('.ehtw-detail-timestamp')).toHaveText(/\d{4}.*\d{1,2}:\d{2} (AM|PM)/);
   });
 
+  test('phone puts the rating and favorite heart on the same row', async ({ page, site }, testInfo) => {
+    test.skip(layoutOf(testInfo) !== 'phone', 'mobile detail layout');
+    await open(page, detailUrl(site.state.galleries[0]));
+    const controls = await Promise.all([
+      ui(page).locator('.ehtw-detail-favorite-action').boundingBox(),
+      ui(page).locator('.ehtw-detail-rating-action').boundingBox()
+    ]);
+    expect(controls[0], 'favorite heart is visible').not.toBeNull();
+    expect(controls[1], 'rating control is visible').not.toBeNull();
+    const favoriteCenterY = controls[0].y + controls[0].height / 2;
+    const ratingCenterY = controls[1].y + controls[1].height / 2;
+    expect(Math.abs(favoriteCenterY - ratingCenterY), 'heart and rating share a row').toBeLessThanOrEqual(4);
+    expect(controls[1].x + controls[1].width).toBeLessThanOrEqual(page.viewportSize().width + 1);
+  });
+
   test('About card: right column on desktop, inline on smaller screens', async ({ page, site }, testInfo) => {
     await open(page, detailUrl(site.state.galleries[0]));
     const metaRow = ui(page).locator('.ehtw-detail-meta');
